@@ -18,7 +18,7 @@ class Database {
 				stock_available INT NOT NULL DEFAULT 1,
 				backup_count INT NOT NULL DEFAULT 5,
 				points_reward INT NOT NULL DEFAULT 10,
-				algorithm_weights JSON NOT NULL DEFAULT '{}',
+				algorithm_weights JSON,
 				cooldown_days INT NOT NULL DEFAULT 0,
 				status VARCHAR(20) NOT NULL DEFAULT 'active',
 				created_at DATETIME NOT NULL,
