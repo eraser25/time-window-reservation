@@ -3,83 +3,70 @@ namespace TWRF;
 
 class Frontend {
 	public function __construct() {
-		add_filter( 'woocommerce_product_single_template', array( $this, 'include_reservation_template' ) );
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		add_action( 'wp_head', array( $this, 'inline_styles' ) );
 	}
 
-	public function include_reservation_template( $template ) {
-		global $product;
+	public function enqueue_scripts() {
+		// Enqueue countdown JS
+		wp_enqueue_script(
+			'twrf-countdown',
+			TWRF_PLUGIN_URL . 'public/js/countdown.js',
+			array(),
+			TWRF_VERSION,
+			true
+		);
 
-		if ( ! $product ) {
-			return $template;
-		}
+		// Enqueue reservation JS
+		wp_enqueue_script(
+			'twrf-reservation',
+			TWRF_PLUGIN_URL . 'public/js/reservation.js',
+			array( 'jquery' ),
+			TWRF_VERSION,
+			true
+		);
 
-		$reservation = Reservation_Manager::get_product_reservation( $product->get_id() );
+		// Enqueue AJAX handler
+		wp_enqueue_script(
+			'twrf-ajax',
+			TWRF_PLUGIN_URL . 'public/js/ajax-handler.js',
+			array( 'jquery' ),
+			TWRF_VERSION,
+			true
+		);
 
-		if ( $reservation ) {
-			add_action( 'woocommerce_after_add_to_cart_button', function() {
-				global $product;
-				$reservation = Reservation_Manager::get_product_reservation( $product->get_id() );
-				if ( $reservation ) {
-					echo do_shortcode( '[twrf_countdown product_id="' . $product->get_id() . '"]' );
-					echo do_shortcode( '[twrf_participant_count product_id="' . $product->get_id() . '"]' );
-					echo do_shortcode( '[twrf_reservation_button product_id="' . $product->get_id() . '"]' );
-				}
-			});
-		}
+		// Localize script
+		wp_localize_script( 'twrf-ajax', 'twrf', array(
+			'ajax_url' => admin_url( 'admin-ajax.php' ),
+			'nonce' => wp_create_nonce( 'twrf_nonce' ),
+		) );
 
-		return $template;
+		// Enqueue frontend CSS
+		wp_enqueue_style(
+			'twrf-frontend',
+			TWRF_PLUGIN_URL . 'public/css/frontend.css',
+			array(),
+			TWRF_VERSION
+		);
 	}
 
-	public function enqueue_frontend_assets() {
-		if ( is_product() ) {
-			wp_enqueue_style(
-				'twrf-frontend',
-				TWRF_PLUGIN_URL . 'public/css/frontend.css',
-				array(),
-				TWRF_VERSION
-			);
-
-			wp_enqueue_script(
-				'twrf-device-fingerprint',
-				TWRF_PLUGIN_URL . 'assets/js/device-fingerprint.js',
-				array(),
-				TWRF_VERSION,
-				true
-			);
-
-			wp_enqueue_script(
-				'twrf-countdown',
-				TWRF_PLUGIN_URL . 'public/js/countdown.js',
-				array( 'jquery' ),
-				TWRF_VERSION,
-				true
-			);
-
-			wp_enqueue_script(
-				'twrf-reservation',
-				TWRF_PLUGIN_URL . 'public/js/reservation.js',
-				array( 'jquery', 'twrf-device-fingerprint', 'twrf-countdown' ),
-				TWRF_VERSION,
-				true
-			);
-
-			wp_enqueue_script(
-				'twrf-ajax-handler',
-				TWRF_PLUGIN_URL . 'public/js/ajax-handler.js',
-				array( 'jquery' ),
-				TWRF_VERSION,
-				true
-			);
-
-			wp_localize_script(
-				'twrf-reservation',
-				'twrf_data',
-				array(
-					'ajax_url' => admin_url( 'admin-ajax.php' ),
-					'nonce'   => wp_create_nonce( 'twrf_nonce' ),
-				)
-			);
-		}
+	public function inline_styles() {
+		?>
+		<style>
+			.twrf-countdown-display {
+				font-size: 24px;
+				font-weight: bold;
+				color: #d32f2f;
+			}
+			
+			.twrf-join-btn {
+				background: #28a745;
+				color: white;
+				padding: 10px 20px;
+				border-radius: 6px;
+				cursor: pointer;
+			}
+		</style>
+		<?php
 	}
 }
