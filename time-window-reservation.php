@@ -183,7 +183,23 @@ register_activation_hook( __FILE__, function() {
 	update_option( 'twrf_activated', current_time( 'mysql' ) );
 	flush_rewrite_rules();
 });
+add_action( 'woocommerce_after_add_to_cart_button', function() {
+	if ( ! is_product() ) {
+		return;
+	}
 
+	global $product;
+	$product_id = $product->get_id();
+
+	echo '<div class="twrf-frontend-widgets" style="margin-top: 30px; padding: 20px; background: #f5f5f5; border-radius: 8px;">';
+	echo '<h3 style="margin-top: 0;">⏱️ Time Window Reservation</h3>';
+	
+	echo do_shortcode( '[twrf_countdown product_id="' . $product_id . '"]' );
+	echo do_shortcode( '[twrf_participant_count product_id="' . $product_id . '"]' );
+	echo do_shortcode( '[twrf_reservation_button product_id="' . $product_id . '"]' );
+	
+	echo '</div>';
+}, 15 );
 // Deactivation hook
 register_deactivation_hook( __FILE__, function() {
 	flush_rewrite_rules();
