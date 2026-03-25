@@ -1,27 +1,40 @@
-jQuery(document).ready(function($) {
-	const nonce = twrf_data.nonce;
-	const ajaxUrl = twrf_data.ajax_url;
+(function($) {
+    'use strict';
 
-	// Get user points
-	function updateUserPoints() {
-		$.ajax({
-			url: ajaxUrl,
-			type: 'POST',
-			data: {
-				action: 'twrf_get_user_points',
-				nonce: nonce
-			},
-			success: function(response) {
-				if (response.success) {
-					$('.twrf-user-points .points-value').text(response.data.points);
-				}
-			}
-		});
-	}
+    // Check if twrf is defined (from wp_localize_script)
+    if (typeof twrf === 'undefined') {
+        console.error('TWRF: Global data not loaded');
+        return;
+    }
 
-	// Update on page load
-	updateUserPoints();
-
-	// Update every 30 seconds
-	setInterval(updateUserPoints, 30000);
-});
+    $(document).ready(function() {
+        
+        // Join Reservation Button
+        $('.twrf-join-btn').on('click', function(e) {
+            e.preventDefault();
+            
+            const productId = $(this).data('product-id');
+            
+            $.ajax({
+                url: twrf.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'twrf_join_reservation',
+                    product_id: productId,
+                    nonce: twrf.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Successfully joined the reservation!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.data);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        });
+    });
+})(jQuery);
